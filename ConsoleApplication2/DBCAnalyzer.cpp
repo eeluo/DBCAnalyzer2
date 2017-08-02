@@ -29,12 +29,14 @@ DBCFileDescriptor DBCAnalyzer::Analyze(std::string const & _file_name)
 
 	return std::move(file_descriptor);
 }
-
+/**
+*  @brief Analyzer a lines
+*/
 void DBCAnalyzer::AnalyzerDBCByLines(std::vector<std::string> const & _lines, DBCFileDescriptor & _file_descriptor)
 {
 	for (auto iter = _lines.begin(); iter != _lines.end(); ++iter)
 	{
-		if (NodeRecognizer(*iter, _file_descriptor))
+		if (NodeRecognizer(*iter, _file_descriptor))///Recognizer node
 		{
 			;///do nothing
 		}
@@ -52,7 +54,7 @@ void DBCAnalyzer::AnalyzerDBCByLines(std::vector<std::string> const & _lines, DB
 		{
 			;///do nothing
 		}
-		else if (AttributeRecognizer(*iter, _file_descriptor))
+		else if (AttributeRecognizer(*iter, _file_descriptor))///Recognizer attribute
 		{
 			;///do nothing
 		}
@@ -68,65 +70,55 @@ void DBCAnalyzer::AnalyzerDBCByLines(std::vector<std::string> const & _lines, DB
 }
 
 /**
-*  @brief The AttributeRecognizer function determines whether the string of 
-*         the attribute definitions section conforms to the specification.
+*@brief AttributeRecognizer方法判断attribute definitions部分的字符串是否符合规范
+*@author luoaling
 *
-*  @author luoaling
+*AttributeRecognizer方法采用正则表达式来检查attribute definitions的字符串，以此达到检验目的，
+*正则匹配字符串较为简单，同时利用正则匹配的默认分组顺序，给相应的
+*Attribute类对象进行赋值，最后添加存储Attribute类型的容器
 *
-*  AttributeRecognizer function uses regular expressions to check the attribute definitions
-*  of the string, in order to achieve the purpose of testing, regular expression matching string
-*  is relatively simple, while the use of regular expression matching the default packet order,
-*  to the corresponding Attribute class object assignment, and finally add a container that stores an Attribute type.
-*
-*  @param[in] _lines _lines is a row in the attribute definitions section of the string.
-*  @param[in] _file_descriptor _file_descriptor is formed by the corresponding file descriptor.
-*
-*  @return Returns a Boolean value that indicates whether the string 
-*          conforms to the specification and conforms to the corresponding file descriptor.
-*
-*  @note The Attribute class contains only the attribute definition part and 
-*        does not contain the attribute value, which consists of two parts：
-*        attribute_definition and attribute_default.
-*
+*@param[in] _lines,_file_descriptor _lines是字符串中attribute definitions部分的某行,_file_descriptor是形成的相应的文件描述符
+*@return 返回一个布尔值，说明字符串是否符合规范，符合则形成相应的文件描述符
+*@note Attribute类只包含属性定义部分，没有包含属性值，它包括两部分：
+*attribute_definition 和 attribute_default
 */
 bool DBCAnalyzer::AttributeRecognizer(std::string const & _line, DBCFileDescriptor & _file_descriptor) {
-	/**
-	   attribute_definitions = { attribute_definition } ;
-	   attribute_definition = 'BA_DEF_' object_type attribute_name attribute_value_type ';';
-	   object_type = '' | 'BU_' | 'BO_' | 'SG_' | 'EV_' ;
-	   attribute_name = '"' C_identifier '"' ;
-	   attribute_value_type = 'INT' signed_integer signed_integer |
-							  'HEX' signed_integer signed_integer |
-							  'FLOAT' double double |
-							  'STRING' |
-							  'ENUM'[char_string{ ',' char_string }]
+	//attribute_definitions = { attribute_definition } ;
+	// attribute_definition = 'BA_DEF_' object_type attribute_name attribute_value_type ';';
+	//object_type = '' | 'BU_' | 'BO_' | 'SG_' | 'EV_' ;
+	//attribute_name = '"' C_identifier '"' ;
+	//attribute_value_type = 'INT' signed_integer signed_integer |
+	//						'HEX' signed_integer signed_integer |
+	//						'FLOAT' double double |
+	//						'STRING' |
+	//						'ENUM'[char_string{ ',' char_string }]
 
-	   attribute_defaults = { attribute_default } ;
-	   attribute_default = 'BA_DEF_DEF_' attribute_name attribute_value ';';
-	   attribute_value = unsigned_integer | signed_integer | double | char_string;
-	*/
+	//attribute_defaults = { attribute_default } ;
+	//attribute_default = 'BA_DEF_DEF_' attribute_name attribute_value ';';
+	//attribute_value = unsigned_integer | signed_integer | double | char_string;
 
-	///  This is a regular expression for the attribute_definition section.
-
-	///  Since the attribute_value_type variable is more complex, the regular expression
-	///  is separated here so that the regular expression can be matched for a variety of situations.
-
-	///  Matches the regular expression of the string except the attribute_value_type part.
+	//这是attribute_definition部分的正则表达式
+	//由于attribute_value_type变量较为复杂，这里将正则表达式分开，以便于对多种情况进行正则匹配
+	//匹配除了attribute_value_type部分的字符串的正则表达式
 	std::regex raw_definition(R"(BA_DEF_\s(BU_|BO_|SG_|EV_|\s?)\s+(\"([^"]*[a-zA-Z_](\w*))\")\s+(.*);)");
-	///  Write the five regular expressions of the attribute_value_type section, respectively.
+	//分别编写attribute_value_type部分的五种正则表达式
 	std::regex int_definition(R"(INT\s+([-]?\d+)\s+([-]?\d+))");
 	std::regex hex_definition(R"(HEX\s+([-]?\d+)\s+([-]?\d+))");
 	std::regex float_definition(R"(FLOAT\s+([-]?\d+(\.\d+)?)\s+([-]?\d+(\.\d+)?))");
 	std::regex string_definition(R"(STRING\s+)");
 	std::regex enum_definition(R"(ENUM\s+(\"([^"]*)\")(,\"([^"]*)\")*)");
-	///  This is a regular expression for the attribute_default section.
+	//这是attribute_default部分的正则表达式
 	std::regex raw_default(R"(BA_DEF_DEF_\s+(\"([^"]*[a-zA-Z_](\w*))\")\s+(\d+|[-]?\d+|[-]?\d+(\.\d+)?|\"([^"]*)\");)");
-	///  m0 stores the matching result for attribute_definition, m1 stores the result of attribute_default.
-	std::smatch m0, m1;
+	std::smatch m0, m1;//m0存储attribute_definition的匹配结果,m1存储attribute_default的匹配结果
+
 	if (!(std::regex_match(_line, m0, raw_definition) || std::regex_match(_line, m1, raw_default))) {
 		return false;
 	}
-	///  The five cases of the attribute_value_type part are respectively regular expression matching.
+	/*if ((!std::regex_match(_line, m0, raw_definition))&&(!std::regex_match(_line, m1, raw_default)))
+	{
+	return false;
+	}*/
+	//分别对attribute_value_type部分的五种情况进行正则匹配
 	bool enum_int = std::regex_match(m0[5].str(), int_definition);
 	bool enum_hex = std::regex_match(m0[5].str(), hex_definition);
 	bool enum_float = std::regex_match(m0[5].str(), float_definition);
@@ -136,20 +128,24 @@ bool DBCAnalyzer::AttributeRecognizer(std::string const & _line, DBCFileDescript
 	if (!(enum_int | enum_hex | enum_float | enum_str | enum_enum | std::regex_match(_line, m1, raw_default))) {
 		return false;
 	}
+	/*if (!enum_int && !enum_hex && !enum_float && !enum_str && !enum_enum && !std::regex_match(_line, m1, raw_default))
+	{
+	return false;
+	}*/
 
 	Attribute att;
-	///  Assign a value to the attribute_default part of the variable.
+	//对attribute_default部分变量赋值
 	if (std::regex_match(_line, m1, raw_default)) {
 		att.SetAttributeName(m1[1].str());
 		att.SetDefaultValue(m1[4].str());
 	}
-	///  Partial variables for the attribute_definition assignment, also divided into five cases to assign values.
+	//对attribute_definition部分变量赋值，同样分五种情况来赋值
 	else {
 		att.SetObjType(m0[1].str());
 		att.SetAttributeName(m0[2].str());
 		if (enum_int) {
 			att.SetValueType(Attribute::INT);
-			std::string delim = ", ";///  Separate the string with spaces and commas as delimiters. 
+			std::string delim = ", ";//分隔符有,和空格两个
 			att.AddValueType(split<std::vector<std::string>>(m0[5].str(), delim));
 		}
 		if (enum_hex) {
@@ -179,34 +175,25 @@ bool DBCAnalyzer::AttributeRecognizer(std::string const & _line, DBCFileDescript
 }
 
 /**
-*  @brief The NodeRecognizer function determines whether the string of 
-*         the node section conforms to the specification.
+*@brief NodeRecognizer方法判断node部分的字符串是否符合规范
+*@author luoaling
 *
-*  @author luoaling
+*NodeRecognizer方法采用正则表达式来检查node的字符串，以此达到检验目的，
+*正则匹配字符串较为简单，同时利用正则匹配的默认分组顺序，给相应的
+*Node类对象进行赋值，最后添加存储Node类型的容器
 *
-*  NodeRecognizer function uses a regular expression to check the node of the string, 
-*  in order to achieve the purpose of testing, regular expression matching string 
-*  is relatively simple, while the use of regular expression matching the default packet order,
-*  to the corresponding Node class object assignment,and the finally add a container that stores an Node type.
-*
-*  @param[in] _lines _lines is a row in the node part of the string.
-*  @param[in] _file_descriptor _file_descriptor is formed by the corresponding file descriptor.
-*
-*  @return Returns a Boolean value that indicates whether the string 
-*          conforms to the specification and conforms to the corresponding file descriptor.
-*
+*@param[in] _lines,_file_descriptor _lines是字符串中node部分的某行,_file_descriptor是形成的相应的文件描述符
+*@return 返回一个布尔值，说明字符串是否符合规范，符合则形成相应的文件描述符
 */
 bool DBCAnalyzer::NodeRecognizer(std::string const & _line, DBCFileDescriptor & _file_descriptor) {
-	/**  
-	   nodes = 'BU_:' {node_name} ;
-	   node_name = C_identifier;
-	*/
+	//nodes = 'BU_:' {node_name} ;
+	//node_name = C_identifier;
 	std::regex node_definition(R"(BU_:\s+([a-zA-Z_][ \w]+).*)");
 	std::smatch m;
 	if (!std::regex_match(_line, m, node_definition)) { return false; }
 
 	Node node;
-	std::string delim = " ";///  Separate the string with a space as a delimiter.
+	std::string delim = " ";//以空格作为分隔符分割字符串
 	std::vector<std::string> vs;
 	SPILT(m[1].str(), ' ', vs);
 	node.AddNodeName(vs);
@@ -424,12 +411,6 @@ bool DBCAnalyzer::SignalRecognizer(std::string const & _line, Message & _msg)
 	return true;
 }
 
-/**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return 
-*/
 uint8_t DBCAnalyzer::ChangMotorolaOrderMSBT2LSB(uint8_t start_bit, uint8_t signal_size) {
 	while (--signal_size) {
 		if (0 == (start_bit % 8)) {
@@ -443,9 +424,8 @@ uint8_t DBCAnalyzer::ChangMotorolaOrderMSBT2LSB(uint8_t start_bit, uint8_t signa
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
+*  @brief output nodes
+*  @param output position
 *  @return void
 */
 void DBCFileDescriptor::PrintNodes(std::ostream & os) const
@@ -456,6 +436,11 @@ void DBCFileDescriptor::PrintNodes(std::ostream & os) const
 	}
 }
 
+/**
+*  @brief output attributes
+*  @param output position
+*  @return void
+*/
 void DBCFileDescriptor::PrintAttributes(std::ostream & os) const
 {
 	for (auto iter = Attributes().begin(); iter < Attributes().end(); iter++)
@@ -464,6 +449,11 @@ void DBCFileDescriptor::PrintAttributes(std::ostream & os) const
 	}
 }
 
+/**
+*  @brief output messages
+*  @param output position
+*  @return void
+*/
 void DBCFileDescriptor::PrintMessages(std::ostream & os) const
 {
 	for (auto iter = Messages().begin(); iter < Messages().end(); iter++)
@@ -473,9 +463,8 @@ void DBCFileDescriptor::PrintMessages(std::ostream & os) const
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
+*  @brief output comments
+*  @param output position
 *  @return void
 */
 void DBCFileDescriptor::PrintComments(std::ostream & os) const
@@ -487,9 +476,8 @@ void DBCFileDescriptor::PrintComments(std::ostream & os) const
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
+*  @brief output attribute values
+*  @param output position
 *  @return void
 */
 void DBCFileDescriptor::PrintAttributeValues(std::ostream & os) const
@@ -501,9 +489,8 @@ void DBCFileDescriptor::PrintAttributeValues(std::ostream & os) const
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
+*  @brief output signalvalues
+*  @param output position
 *  @return void
 */
 void DBCFileDescriptor::PrintSignalValues(std::ostream & os) const
@@ -515,9 +502,8 @@ void DBCFileDescriptor::PrintSignalValues(std::ostream & os) const
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
+*  @brief output all descriptor
+*  @param output position
 *  @return void
 */
 void DBCFileDescriptor::PrintDescriptor(std::ostream & os) const
@@ -531,13 +517,14 @@ void DBCFileDescriptor::PrintDescriptor(std::ostream & os) const
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
+*  @brief search for attribute value's object type
+*  @param attribute value's object type
+*  @param attribute values which have this object type
+*  @return The number of attributevalues which have the object type
 */
-uint32_t DBCFileDescriptor::ObjectTypeSearch(AttributeValue::_ObjectType ot, std::vector<AttributeValue> & va) const
+uint32_t DBCFileDescriptor::AttributeValueObjectTypeSearch(AttributeValue::_ObjectType ot, std::vector<AttributeValue> & va) const
 {
+	va.clear();
 	uint32_t num = 0;
 	for (auto iter = m_attributevalues.begin(); iter < m_attributevalues.end(); iter++)
 	{
@@ -551,12 +538,13 @@ uint32_t DBCFileDescriptor::ObjectTypeSearch(AttributeValue::_ObjectType ot, std
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
+*  @brief search for attribute value's object type
+*  @param attribute value's object type
+*  @param output or not output
+*  @param output position
+*  @return The number of attributevalues which have the object type
 */
-uint32_t DBCFileDescriptor::ObjectTypeSearch(AttributeValue::_ObjectType ot, bool output, std::ostream & os) const
+uint32_t DBCFileDescriptor::AttributeValueObjectTypeSearch(AttributeValue::_ObjectType ot, bool output, std::ostream & os) const
 {
 	uint32_t num = 0;
 	for (auto iter = m_attributevalues.begin(); iter < m_attributevalues.end(); iter++)
@@ -574,13 +562,14 @@ uint32_t DBCFileDescriptor::ObjectTypeSearch(AttributeValue::_ObjectType ot, boo
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
+*  @brief search for signal's receiver
+*  @param signal's receiver
+*  @param the signals which have this receiver
+*  @return The number of receivers which have the receiver.
 */
-uint32_t DBCFileDescriptor::SignalReceiversSearch(const std::string & srs,std::vector<Signal> & vs) const
+uint32_t DBCFileDescriptor::SignalReceiversSearch(const std::string & receiver,std::vector<Signal> & vs) const
 {
+	vs.clear();
 	int num = 0;
 	for (auto iter_message = Messages().begin(); iter_message < Messages().end(); iter_message++)
 	{
@@ -588,7 +577,7 @@ uint32_t DBCFileDescriptor::SignalReceiversSearch(const std::string & srs,std::v
 		{
 			for (auto iter_receiver = iter_signal->Receivers().begin(); iter_receiver < iter_signal->Receivers().end(); iter_receiver++)
 			{
-				if (*iter_receiver == srs)
+				if (*iter_receiver == receiver)
 				{
 					num++;
 					vs.push_back(*iter_signal);
@@ -601,12 +590,13 @@ uint32_t DBCFileDescriptor::SignalReceiversSearch(const std::string & srs,std::v
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
+*  @brief search for signal's receiver
+*  @param signal's receiver
+*  @param output or not output
+*  @param output position
+*  @return The number of receivers which have the receiver.
 */
-uint32_t DBCFileDescriptor::SignalReceiversSearch(const std::string & srs, bool output, std::ostream & os) const
+uint32_t DBCFileDescriptor::SignalReceiversSearch(const std::string & receiver, bool output, std::ostream & os) const
 {
 	int num = 0;
 	for (auto iter_message = Messages().begin(); iter_message < Messages().end(); iter_message++)
@@ -615,7 +605,7 @@ uint32_t DBCFileDescriptor::SignalReceiversSearch(const std::string & srs, bool 
 		{
 			for (auto iter_receiver = iter_signal->Receivers().begin(); iter_receiver < iter_signal->Receivers().end(); iter_receiver++)
 			{
-				if (*iter_receiver == srs)
+				if (*iter_receiver == receiver)
 				{
 					num++;
 					if (output)
@@ -631,12 +621,13 @@ uint32_t DBCFileDescriptor::SignalReceiversSearch(const std::string & srs, bool 
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
+*  @brief search for message ID
+*  @param message ID
+*  @param output or not output
+*  @param output position
+*  @return have or not have
 */
-bool DBCFileDescriptor::MessageIdSearch(uint32_t id, bool output, std::ostream & os) const
+bool DBCFileDescriptor::MessageIdSearch(uint32_t id, bool output, std::ostream & os)const
 {
 	for (auto iter = Messages().begin(); iter < Messages().end(); iter++)
 	{
@@ -678,7 +669,7 @@ bool DBCFileDescriptor::MessageIdSearch(uint32_t id, Message & msg) const
 *  @param output position
 *  @return have or not have
 */
-bool DBCFileDescriptor::MessageNameSearch(const std::string & name, bool output, std::ostream & os) const
+bool DBCFileDescriptor::MessageNameSearch(const std::string & name, bool output, std::ostream & os)
 {
 	for (auto iter = Messages().begin(); iter < Messages().end(); iter++)
 	{
@@ -695,10 +686,10 @@ bool DBCFileDescriptor::MessageNameSearch(const std::string & name, bool output,
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
+*  @brief search for message name
+*  @param message name
+*  @param the message which has this name
+*  @return have or not have
 */
 bool DBCFileDescriptor::MessageNameSearch(const std::string & name, Message & msg) const
 {
@@ -714,10 +705,10 @@ bool DBCFileDescriptor::MessageNameSearch(const std::string & name, Message & ms
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
+*  @brief search for comment's message ID
+*  @param comment's message ID
+*  @param output or not output
+*  @return The number of comments which have the id.
 */
 uint32_t DBCFileDescriptor::CommentMessageIdSearch(uint32_t id, bool output, std::ostream & os) const
 {
@@ -735,11 +726,34 @@ uint32_t DBCFileDescriptor::CommentMessageIdSearch(uint32_t id, bool output, std
 	}
 	return num;
 }
+
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
+*  @brief search for comment's message ID
+*  @param comment's message ID
+*  @param the comments which have this ID
+*  @return The number of comments which have the id.
+*/
+uint32_t DBCFileDescriptor::CommentMessageIdSearch(uint32_t id, std::vector<Comment> & vc) const
+{
+	vc.clear();
+	uint32_t num = 0;
+	for (auto iter = Comments().begin(); iter < Comments().end(); iter++)
+	{
+		if (iter->MessageId() == id)
+		{
+			num++;
+			vc.push_back(*iter);
+		}
+	}
+	return num;
+}
+
+/**
+*  @brief search for message transmitter
+*  @param message transmitter
+*  @param output or not output
+*  @param output position
+*  @return The number of messages which have the transimmter.
 */
 uint32_t DBCFileDescriptor::MessagetransmitterSearch(const std::string & name, bool output, std::ostream & os) const
 {
@@ -759,13 +773,14 @@ uint32_t DBCFileDescriptor::MessagetransmitterSearch(const std::string & name, b
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
+*  @brief search for message transmitter
+*  @param message transmitter
+*  @param the messages which have this transmitter
+*  @return The number of messages which have the transimmter.
 */
 uint32_t DBCFileDescriptor::MessagetransmitterSearch(const std::string & name, std::vector<Message> & vm) const
 {
+	vm.clear();
 	uint32_t num = 0;
 	for (auto iter = Messages().begin(); iter < Messages().end(); iter++)
 	{
@@ -779,29 +794,10 @@ uint32_t DBCFileDescriptor::MessagetransmitterSearch(const std::string & name, s
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
-*  @return The number of signalvalues which have the id.
-*/
-uint32_t DBCFileDescriptor::CommentMessageIdSearch(uint32_t id, std::vector<Comment> & vc) const
-{
-	uint32_t num = 0;
-	for (auto iter = Comments().begin(); iter < Comments().end(); iter++)
-	{
-		if (iter->MessageId() == id)
-		{
-			num++;
-			vc.push_back(*iter);
-		}
-	}
-	return num;
-}
-
-/**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
+*  @brief search for signal value's message ID
+*  @param signal value's message ID
+*  @param ouput or not output
+*  @param ouput position 
 *  @return The number of signalvalues which have the id.
 */
 uint32_t DBCFileDescriptor::SignalValueMessageIdSearch(uint32_t id, bool output, std::ostream & os) const
@@ -822,13 +818,14 @@ uint32_t DBCFileDescriptor::SignalValueMessageIdSearch(uint32_t id, bool output,
 }
 
 /**
-* 简要的函数说明文字
-*  @param 参数1说明
-*  @param 参数2说明
+*  @brief search for signal value's message ID
+*  @param signal value's message ID
+*  @param the signalvalues which have this ID
 *  @return The number of signalvalues which have the id.
 */
 uint32_t DBCFileDescriptor::SignalValueMessageIdSearch(uint32_t id, std::vector<SignalValue> & vs) const
 {
+	vs.clear();
 	uint32_t num = 0;
 	for (auto iter = SignalValues().begin(); iter < SignalValues().end(); iter++)
 	{
@@ -889,7 +886,7 @@ bool DBCFileDescriptor::AttributeNameSearch(const std::string & name, Attribute 
 *  @param[out] os  output position.
 *  @return whether or not to find the attributes with this value_type.
 */
-uint32_t DBCFileDescriptor::AttValueTypeSearch(Attribute::VALUE_TYPE vt, bool output , std::ostream & os) const {
+uint32_t DBCFileDescriptor::AttValueTypeSearch(Attribute::VALUE_TYPE vt, bool output, std::ostream & os) const {
 	uint32_t num = 0;
 	for (auto iter = m_attributes.begin(); iter < m_attributes.end(); iter++)
 	{
