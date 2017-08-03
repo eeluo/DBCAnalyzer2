@@ -87,7 +87,7 @@ static void output(const std::string & _str)
 	}
 
 	std::smatch m;
-	if (!std::regex_match(_str, m, std::regex(R"((\w+)\s(\w+))")))
+	if (!std::regex_match(_str, m, std::regex(R"((\w+)\s(.*))")))
 	{
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
 		std::cout << "Error: " << _str << " is not an effective command!" << std::endl;
@@ -171,7 +171,7 @@ static void search(const std::string & _str)
 	else
 	{
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
-		std::cout << "Error: " << m[1].str() << " is not an effective command!" << std::endl;
+		std::cout << "Error: " << _str << " is not an effective command!" << std::endl;
 	}
 	return;
 }
@@ -213,6 +213,14 @@ static void message_id_search()
 	uint32_t id;
 	std::cin >> id;
 	getchar();
+	if (!std::cin)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+		std::cout << "Error: please input numbers!" << std::endl;
+		std::cin.clear();
+		std::cin.sync();
+		return;
+	}
 	Message msg;
 	if (descriptor.MessageIdSearch(id, msg))
 	{
@@ -351,6 +359,14 @@ static void comment_message_id_search()
 	uint32_t id;
 	std::cin >> id;
 	getchar();
+	if (!std::cin)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+		std::cout << "Error: please input numbers!" << std::endl;
+		std::cin.clear();
+		std::cin.sync();
+		return;
+	}
 	std::vector<Comment> vcmt;
 	uint32_t num = descriptor.CommentMessageIdSearch(id, vcmt);
 	if (num)
@@ -410,6 +426,14 @@ static void signalvalue_message_id_search()
 	uint32_t id;
 	std::cin >> id;
 	getchar();
+	if (!std::cin)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+		std::cout << "Error: please input numbers!" << std::endl;
+		std::cin.clear();
+		std::cin.sync();
+		return;
+	}
 	std::vector<SignalValue> vsv;
 	uint32_t num = descriptor.SignalValueMessageIdSearch(id, vsv);
 	if (num)
@@ -492,76 +516,18 @@ static void attribute_name_search()
 */
 static void attribute_valuetype_search()
 {
-	std::cout << "Please input the objecttype.\n0 is nothing, 1 is BO_, 2 is BU_, 3 is SG_, 4 is Ev_\n: ";
-	uint32_t value;
-	std::cin >> value;
-	getchar();
-	if (value > 4)
-	{
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
-		std::cout << "Don't have this type!" << std::endl;
-		return;
-	}
-	AttributeValue::_ObjectType vt = static_cast<AttributeValue::_ObjectType>(value);
-	std::vector<AttributeValue> vabtv;
-	uint32_t num = descriptor.AttributeValueObjectTypeSearch(vt, vabtv);
-	if (num)
-	{
-		std::cout << num << " attributevalues have this object type. Do you want to know them?\n: ";
-		std::string str;
-		std::cin >> str;
-		getchar();
-		if ("yes" == str)
-		{
-			for (auto iter = vabtv.begin(); iter < vabtv.end(); iter++)
-			{
-				std::cout << *iter << std::endl;
-			}
-		}
-		else if ("no" == str)
-		{
-			;
-		}
-		else
-		{
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
-			std::cout << "Error: " << str << " is not an effective command!" << std::endl;
-		}
-	}
-	else
-	{
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
-		std::cout << "NO attributevalues have this value type." << std::endl;
-	}
-	return;
-}
-
-/**
-* @brief search attributevalue
-* @param command
-*/
-static void attributevalue_search(const std::string & _str)
-{
-	if ("objecttype" == _str)
-	{
-		attributevalue_objecttype_serarch();
-	}
-	else
-	{
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
-		std::cout << "Error: " << _str << " is not an effective command!" << std::endl;
-	}
-}
-
-/**
-* @brief search attributevalue's object type
-*/
-static void attributevalue_objecttype_serarch()
-{
 	std::cout << "Please input the valuetype.\n0 is INT, 1 is HEX, 2 is FLOAT, 3 is STRING, 4 is ENUM: ";
 	uint32_t value;
 	std::cin >> value;
 	getchar();
+	if (!std::cin)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+		std::cout << "Error: please input numbers!" << std::endl;
+		std::cin.clear();
+		std::cin.sync();
+		return;
+	}
 	if (value > 4)
 	{
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
@@ -598,6 +564,80 @@ static void attributevalue_objecttype_serarch()
 	{
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
 		std::cout << "NO attributes have this value type." << std::endl;
+	}
+	return;
+}
+
+/**
+* @brief search attributevalue
+* @param command
+*/
+static void attributevalue_search(const std::string & _str)
+{
+	if ("objecttype" == _str)
+	{
+		attributevalue_objecttype_serarch();
+	}
+	else
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+		std::cout << "Error: " << _str << " is not an effective command!" << std::endl;
+	}
+}
+
+/**
+* @brief search attributevalue's object type
+*/
+static void attributevalue_objecttype_serarch()
+{
+	std::cout << "Please input the objecttype.\n0 is nothing, 1 is BU_, 2 is BO_, 3 is SG_, 4 is Ev_\n: ";
+	uint32_t value;
+	std::cin >> value;
+	getchar();
+	if (!std::cin)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+		std::cout << "Error: please input numbers!" << std::endl;
+		std::cin.clear();
+		std::cin.sync();
+		return;
+	}
+	if (value > 4)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+		std::cout << "Don't have this type!" << std::endl;
+		return;
+	}
+	AttributeValue::_ObjectType vt = static_cast<AttributeValue::_ObjectType>(value);
+	std::vector<AttributeValue> vabtv;
+	uint32_t num = descriptor.AttributeValueObjectTypeSearch(vt, vabtv);
+	if (num)
+	{
+		std::cout << num << " attributevalues have this object type. Do you want to know them?\n: ";
+		std::string str;
+		std::cin >> str;
+		getchar();
+		if ("yes" == str)
+		{
+			for (auto iter = vabtv.begin(); iter < vabtv.end(); iter++)
+			{
+				std::cout << *iter << std::endl;
+			}
+		}
+		else if ("no" == str)
+		{
+			;
+		}
+		else
+		{
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+			std::cout << "Error: " << str << " is not an effective command!" << std::endl;
+		}
+	}
+	else
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+		std::cout << "NO attributevalues have this value type." << std::endl;
 	}
 	return;
 }
