@@ -4,7 +4,7 @@ BO_ 1620 CAN_Message_1: 8 BCM
  SG_ SIG_05 : 23|16@0+ (0.001,0) [0|5] "V"  ECU,BCM
  SG_ SIG_05 : 7|16@0+ (0.001,0) [0|5] "V"  ECU,BCM
 
-BO_ 1604 CAN_Message_1: 8 BCM
+BO_ 1604 CAN_Message_2: 8 BCM
  SG_ SIG_12_04 : 55|16@0+ (0.001,0) [0|5] "V"  ECU,BCM
  SG_ SIG_11_04 : 39|16@0+ (0.001,0) [0|5] "V"  ECU,BCM
  SG_ SIG_10_04 : 23|16@0+ (0.001,0) [0|5] "V"  ECU,BCM

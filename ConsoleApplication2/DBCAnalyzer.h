@@ -30,8 +30,8 @@ public:
 	bool MessageNameSearch(const std::string & name, bool output = false, std::ostream & os = std::cout);
 	bool MessageNameSearch(const std::string & name, Message & vc)const;
 
-	uint32_t MessagetransmitterSearch(const std::string & name, bool output = false, std::ostream & os = std::cout)const;
-	uint32_t MessagetransmitterSearch(const std::string & name, std::vector<Message> & vm)const;
+	uint32_t MessageTransmitterSearch(const std::string & name, bool output = false, std::ostream & os = std::cout)const;
+	uint32_t MessageTransmitterSearch(const std::string & name, std::vector<Message> & vm)const;
 
 	void AddComment(const Comment & _cmt)
 	{

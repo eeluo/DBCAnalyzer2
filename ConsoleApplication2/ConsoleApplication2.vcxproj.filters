@@ -63,6 +63,9 @@
     <ClInclude Include="NodeAnalyzer.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Search.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -102,6 +105,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Node.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Search.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -5,6 +5,7 @@
 
 #include <regex>
 #include <fstream>
+#include <Windows.h>
 
 DBCAnalyzer::DBCAnalyzer()
 {
@@ -20,6 +21,12 @@ DBCFileDescriptor DBCAnalyzer::Analyze(std::string const & _file_name)
 	DBCFileDescriptor file_descriptor;
 
 	std::ifstream in_file(_file_name);
+	if (!in_file.is_open())
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+		std::cout << "Error: Can't open this file!" << std::endl;
+		return file_descriptor;
+	}
 	std::vector<std::string> file_lines;
 	std::string line;
 	while (std::getline(in_file, line)) {
@@ -755,7 +762,7 @@ uint32_t DBCFileDescriptor::CommentMessageIdSearch(uint32_t id, std::vector<Comm
 *  @param output position
 *  @return The number of messages which have the transimmter.
 */
-uint32_t DBCFileDescriptor::MessagetransmitterSearch(const std::string & name, bool output, std::ostream & os) const
+uint32_t DBCFileDescriptor::MessageTransmitterSearch(const std::string & name, bool output, std::ostream & os) const
 {
 	uint32_t num = 0;
 	for (auto iter = Messages().begin(); iter < Messages().end(); iter++)
@@ -778,7 +785,7 @@ uint32_t DBCFileDescriptor::MessagetransmitterSearch(const std::string & name, b
 *  @param the messages which have this transmitter
 *  @return The number of messages which have the transimmter.
 */
-uint32_t DBCFileDescriptor::MessagetransmitterSearch(const std::string & name, std::vector<Message> & vm) const
+uint32_t DBCFileDescriptor::MessageTransmitterSearch(const std::string & name, std::vector<Message> & vm) const
 {
 	vm.clear();
 	uint32_t num = 0;

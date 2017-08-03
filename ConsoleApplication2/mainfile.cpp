@@ -1,29 +1,25 @@
 #include "stdafx.h"
 #include "DBCAnalyzer.h"
-
+#include "Search.h"
 #include <fstream>
 #include <iostream>
+#include <Windows.h>
 
 //#define DEBUG
 #ifndef DEBUG
 
 int main()
 {
-	std::ofstream file("D:\\Git-SourceTree\\test.txt");
-	DBCAnalyzer a_file;
-	DBCFileDescriptor descriptor(a_file.Analyze("D:\\Git-SourceTree\\CAN3_151215_CL_local.dbc"));
-	descriptor.PrintDescriptor(file);
-	std::cout 
-		<< descriptor.AttributeValueObjectTypeSearch(AttributeValue::SG_) << std::endl
-		<< descriptor.MessagetransmitterSearch("CMU_11") << std::endl
-		<< descriptor.CommentMessageIdSearch(1770) << std::endl
-		<< descriptor.SignalReceiversSearch("BMU") << std::endl
-		<< descriptor.SignalValueMessageIdSearch(1553) << std::endl;
-	descriptor.MessageNameSearch("CMU_RS1_11", true);
-	descriptor.MessageIdSearch(1620, true);
-	file.close();
-	system("pause");
-	return 0;
+	std::string command_name;
+	while (1)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN);
+		std::cout << "Please input your command: ";
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);//7 is white
+		getline(std::cin, command_name);
+		analyzer(command_name);
+	}
+	return EXIT_FAILURE;
 }
 
 #else
@@ -64,3 +60,4 @@ TEST(yizhengc, regex)
 	EXPECT_EQ(5, descriptor.SignalValues().size());
 }
 #endif
+
